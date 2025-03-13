@@ -1,40 +1,494 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-<meta charset="utf-8">
-<title>许金 许金 许金</title>
-
-<style>
-html,body{
-	margin:0px;
-	width:100%;
-	height:100%;
-	overflow:hidden;
-}
-</style>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Time Zone Converter</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .time-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        .time-card {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            text-align: center;
+            transition: transform 0.2s;
+        }
+        .time-card:hover {
+            transform: translateY(-5px);
+        }
+        .time-card h3 {
+            color: #2c3e50;
+            margin: 0 0 10px 0;
+        }
+        .time {
+            font-size: 24px;
+            font-weight: bold;
+            color: #3498db;
+            margin: 10px 0;
+        }
+        .time-input {
+            font-size: 24px;
+            font-weight: bold;
+            color: #3498db;
+            margin: 10px 0;
+            width: 120px;
+            text-align: center;
+            border: 2px solid #3498db;
+            border-radius: 4px;
+            padding: 5px;
+        }
+        .date-input {
+            width: 130px;
+            text-align: center;
+            border: 2px solid #3498db;
+            border-radius: 4px;
+            padding: 5px;
+            margin: 5px 0;
+            font-size: 16px;
+        }
+        .time-input:focus {
+            outline: none;
+            border-color: #2980b9;
+            box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+        }
+        .date {
+            color: #7f8c8d;
+            font-size: 14px;
+            margin: 5px 0;
+        }
+        .timezone {
+            color: #95a5a6;
+            font-size: 14px;
+            margin: 5px 0;
+        }
+        .offset {
+            color: #e74c3c;
+            font-size: 14px;
+            font-weight: bold;
+            margin: 5px 0;
+            padding: 3px 8px;
+            background: #fde8e8;
+            border-radius: 4px;
+            display: inline-block;
+        }
+        .abbreviation {
+            color: #27ae60;
+            font-size: 14px;
+            font-weight: bold;
+            margin: 5px 0;
+            padding: 3px 8px;
+            background: #e8f5e9;
+            border-radius: 4px;
+            display: inline-block;
+        }
+        .dst-status {
+            color: #8e44ad;
+            font-size: 14px;
+            font-weight: bold;
+            margin: 5px 0;
+            padding: 3px 8px;
+            background: #f5eeff;
+            border-radius: 4px;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+        .dst-status.summer {
+            color: #d35400;
+            background: #fff5e6;
+        }
+        .dst-status.winter {
+            color: #2980b9;
+            background: #e6f3ff;
+        }
+        .edit-mode {
+            cursor: pointer;
+            color: #3498db;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        .edit-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        .confirm-btn {
+            background: #2ecc71;
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+        .confirm-btn:hover {
+            background: #27ae60;
+        }
+        .cancel-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+        .cancel-btn:hover {
+            background: #c0392b;
+        }
+    </style>
 </head>
 <body>
-	
-	
-	<h1> 苏苏!  苏苏!  苏苏!    mua!</h1>
-	
-	<h1>许金,你在吗!!!!你在吗!!</h1>
-	<h2>你不理我 干!!!! 你怎么回事!!!</h2>
-	
-	
-<canvas id="canvas" style="position:absolute;width:100%;height:100%;z-index:8888"></canvas>
-<canvas style="position:absolute;width:100%;height:100%;z-index:9999" class="canvas" ></canvas>
-<div class="overlay">
-	
-  <div class="tabs">
-    
-	
-    <div class="tabs-panels">
-      <ul class="tabs-panel commands">
-      </ul>
+    <div id="app">
+        <div class="container">
+            <h1>Global Time Zone Converter</h1>
+            <div class="time-grid">
+                <div class="time-card" v-for="zone in timeZones" :key="zone.name">
+                    <h3>{{ zone.name }}</h3>
+                    <div v-if="zone.isEditing">
+                        <input 
+                            type="date" 
+                            v-model="zone.editedDate" 
+                            class="date-input"
+                            @keyup.enter="confirmEdit(zone)"
+                        >
+                        <input 
+                            type="time" 
+                            v-model="zone.editedTime" 
+                            class="time-input"
+                            @keyup.enter="confirmEdit(zone)"
+                        >
+                        <div class="edit-controls">
+                            <button class="confirm-btn" @click="confirmEdit(zone)">确认</button>
+                            <button class="cancel-btn" @click="cancelEdit(zone)">取消</button>
+                        </div>
+                    </div>
+                    <div v-else class="time" @click="startEditing(zone)">{{ zone.time }}</div>
+                    <div class="date">{{ zone.date }}</div>
+                    <div class="abbreviation">{{ zone.abbreviation }}</div>
+                    <div class="offset">{{ zone.offset }}</div>
+                    <div class="timezone">{{ zone.zone }}</div>
+                    <div v-if="supportsDST(zone.zone)" class="dst-status" :class="{ 'summer': isDST(referenceTime, zone.zone), 'winter': !isDST(referenceTime, zone.zone) }">
+                        {{ isDST(referenceTime, zone.zone) ? '夏令时' : '冬令时' }}
+                    </div>
+                    <div class="edit-mode" @click="startEditing(zone)">点击编辑时间</div>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
-</div>
+
+    <script>
+        const { createApp } = Vue
+
+        createApp({
+            data() {
+                return {
+                    timeZones: [
+                        { name: '美西时间', zone: 'America/Los_Angeles', isEditing: false, editedTime: '', editedDate: '', originalTime: '', originalDate: '' },
+                        { name: '美东时间', zone: 'America/New_York', isEditing: false, editedTime: '', editedDate: '', originalTime: '', originalDate: '' },
+                        { name: '中欧时间', zone: 'Europe/Berlin', isEditing: false, editedTime: '', editedDate: '', originalTime: '', originalDate: '' },
+                        { name: '英国时间', zone: 'Europe/London', isEditing: false, editedTime: '', editedDate: '', originalTime: '', originalDate: '' },
+                        { name: '中国时间', zone: 'Asia/Shanghai', isEditing: false, editedTime: '', editedDate: '', originalTime: '', originalDate: '' }
+                    ],
+                    referenceTime: new Date()
+                }
+            },
+            methods: {
+                getTimezoneOffset(timeZone) {
+                    const date = this.referenceTime
+                    const formatter = new Intl.DateTimeFormat('en-US', {
+                        timeZone: timeZone,
+                        timeZoneName: 'shortOffset'
+                    })
+                    const parts = formatter.formatToParts(date)
+                    const offset = parts.find(part => part.type === 'timeZoneName')?.value || ''
+                    return offset
+                },
+                getTimezoneAbbreviation(timeZone) {
+                    const date = this.referenceTime;
+                    
+                    // 使用更精确的方法为特定时区设置缩写
+                    if (timeZone === 'America/Los_Angeles') {
+                        return this.isDST(this.referenceTime, timeZone) ? 'PDT' : 'PST';
+                    } else if (timeZone === 'America/New_York') {
+                        return this.isDST(this.referenceTime, timeZone) ? 'EDT' : 'EST';
+                    } else if (timeZone === 'Europe/London') {
+                        return this.isDST(this.referenceTime, timeZone) ? 'BST' : 'GMT';
+                    } else if (timeZone === 'Europe/Berlin') {
+                        return this.isDST(this.referenceTime, timeZone) ? 'CEST' : 'CET';
+                    } else {
+                        // 对于其他时区，使用Intl API获取缩写
+                        const formatter = new Intl.DateTimeFormat('en-US', {
+                            timeZone: timeZone,
+                            timeZoneName: 'short'
+                        });
+                        const parts = formatter.formatToParts(date);
+                        return parts.find(part => part.type === 'timeZoneName')?.value || '';
+                    }
+                },
+                isDST(date, timeZone) {
+                    try {
+                        // 获取当年1月和7月的时区偏移量
+                        const jan = new Date(date.getFullYear(), 0, 1);
+                        const jul = new Date(date.getFullYear(), 6, 1);
+                        
+                        // 使用Intl格式化获取特定时区的时间
+                        const janOptions = { timeZone, hour: 'numeric', hour12: false };
+                        const julOptions = { timeZone, hour: 'numeric', hour12: false };
+                        
+                        const janFormatter = new Intl.DateTimeFormat('en-US', janOptions);
+                        const julFormatter = new Intl.DateTimeFormat('en-US', julOptions);
+                        
+                        // 设置相同的UTC时间
+                        jan.setUTCHours(12, 0, 0, 0);
+                        jul.setUTCHours(12, 0, 0, 0);
+                        
+                        const janHour = parseInt(janFormatter.format(jan));
+                        const julHour = parseInt(julFormatter.format(jul));
+                        
+                        // 如果7月的小时数不同于1月，说明这个时区有DST
+                        // 然后判断当前日期与1月和7月的关系
+                        const currentFormatter = new Intl.DateTimeFormat('en-US', julOptions);
+                        const currentHour = parseInt(currentFormatter.format(date));
+                        
+                        // 北半球: 如果当前小时等于7月的小时，可能是DST(夏季)
+                        // 南半球: 如果当前小时等于1月的小时，可能是DST(夏季，在南半球是反过来的)
+                        
+                        // 美国和欧洲都在北半球
+                        if (timeZone.startsWith('America/') || timeZone.startsWith('Europe/')) {
+                            // 有DST，且当前小时等于7月的小时，则是DST
+                            if (janHour !== julHour && currentHour === julHour) {
+                                return true;
+                            }
+                            
+                            // 有更精确的方法: 检查特定的日期范围
+                            const year = date.getFullYear();
+                            
+                            // 美国DST: 3月第二个周日到11月第一个周日
+                            if (timeZone.startsWith('America/')) {
+                                // 计算3月第二个周日
+                                let marchSecondSunday = new Date(year, 2, 1);
+                                let dayOfWeek = marchSecondSunday.getDay();
+                                marchSecondSunday.setDate(marchSecondSunday.getDate() + (14 - (dayOfWeek + 7) % 7));
+                                
+                                // 计算11月第一个周日
+                                let novFirstSunday = new Date(year, 10, 1);
+                                dayOfWeek = novFirstSunday.getDay();
+                                novFirstSunday.setDate(novFirstSunday.getDate() + (7 - dayOfWeek) % 7);
+                                
+                                // 检查当前日期是否在DST范围内
+                                return date >= marchSecondSunday && date < novFirstSunday;
+                            }
+                            
+                            // 欧洲DST: 3月最后一个周日到10月最后一个周日
+                            if (timeZone.startsWith('Europe/')) {
+                                // 计算3月最后一个周日
+                                let marchLastSunday = new Date(year, 3, 0);
+                                while (marchLastSunday.getDay() !== 0) {
+                                    marchLastSunday.setDate(marchLastSunday.getDate() - 1);
+                                }
+                                
+                                // 计算10月最后一个周日
+                                let octLastSunday = new Date(year, 10, 0);
+                                while (octLastSunday.getDay() !== 0) {
+                                    octLastSunday.setDate(octLastSunday.getDate() - 1);
+                                }
+                                
+                                // 检查当前日期是否在DST范围内
+                                return date >= marchLastSunday && date < octLastSunday;
+                            }
+                        }
+                        
+                        // 对于其他地区，简单比较小时差异
+                        return janHour !== julHour && currentHour === julHour;
+                    } catch (e) {
+                        console.error("DST detection error:", e);
+                        return false;
+                    }
+                },
+                startEditing(zone) {
+                    // 停止自动更新
+                    if (this.updateInterval) {
+                        clearInterval(this.updateInterval)
+                        this.updateInterval = null
+                    }
+                    
+                    zone.isEditing = true
+                    const timeOptions = {
+                        timeZone: zone.zone,
+                        hour12: false,
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    }
+                    const dateOptions = {
+                        timeZone: zone.zone,
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit'
+                    }
+                    
+                    // 设置时间
+                    zone.editedTime = this.referenceTime.toLocaleTimeString('zh-CN', timeOptions).slice(0, 5)
+                    zone.originalTime = zone.editedTime
+                    
+                    // 设置日期
+                    const dateFormatter = new Intl.DateTimeFormat('en-CA', dateOptions)
+                    zone.editedDate = dateFormatter.format(this.referenceTime)
+                    zone.originalDate = zone.editedDate
+                },
+                confirmEdit(zone) {
+                    this.updateTimeFromEdit(zone)
+                },
+                cancelEdit(zone) {
+                    zone.editedTime = zone.originalTime
+                    zone.editedDate = zone.originalDate
+                    zone.isEditing = false
+                    this.startAutoUpdate()
+                },
+                updateTimeFromEdit(editedZone) {
+                    try {
+                        const [hours, minutes] = editedZone.editedTime.split(':').map(Number)
+                        const [year, month, day] = editedZone.editedDate.split('-').map(Number)
+                        
+                        // 创建一个基于用户输入时间的日期字符串，使用ISO格式确保正确解析
+                        const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:00`
+                        const dateTimeString = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}T${timeString}`
+                        
+                        // 创建一个新的Date对象，基于用户输入的时间和时区
+                        const formatter = new Intl.DateTimeFormat('en-CA', {
+                            timeZone: editedZone.zone,
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit',
+                            hour12: false
+                        })
+                        
+                        // 首先，创建一个UTC时间
+                        const userDateTime = new Date(dateTimeString)
+                        
+                        // 获取时区偏移量（分钟）
+                        const targetDate = new Date(year, month - 1, day, hours, minutes)
+                        const targetTimezoneDate = new Date(formatter.format(targetDate).replace(/,/g, ''))
+                        const offsetDiff = (targetTimezoneDate - targetDate) / (60 * 1000)
+                        
+                        // 应用偏移量调整
+                        this.referenceTime = new Date(userDateTime.getTime() - offsetDiff * 60 * 1000)
+                        
+                        // 验证时间是否正确
+                        const verifyDateTime = formatter.format(this.referenceTime)
+                        const verifyParts = verifyDateTime.split(/[- :]/)
+                        const verifyYear = parseInt(verifyParts[0])
+                        const verifyMonth = parseInt(verifyParts[1])
+                        const verifyDay = parseInt(verifyParts[2])
+                        const verifyHours = parseInt(verifyParts[3])
+                        const verifyMinutes = parseInt(verifyParts[4])
+                        
+                        // 如果日期或时间不匹配，进行调整
+                        if (verifyYear !== year || verifyMonth !== month || verifyDay !== day ||
+                            verifyHours !== hours || verifyMinutes !== minutes) {
+                            // 计算总的分钟差异
+                            const dateDiff = new Date(year, month - 1, day, hours, minutes) - 
+                                           new Date(verifyYear, verifyMonth - 1, verifyDay, verifyHours, verifyMinutes)
+                            this.referenceTime = new Date(this.referenceTime.getTime() + dateDiff)
+                        }
+                        
+                        // 更新所有时区
+                        this.updateAllTimeZones()
+                        
+                        // 重新启动自动更新
+                        this.startAutoUpdate()
+                    } catch (error) {
+                        console.error('Time conversion error:', error)
+                    }
+                    
+                    editedZone.isEditing = false
+                },
+                updateAllTimeZones() {
+                    this.timeZones.forEach(zone => {
+                        try {
+                            // 分别格式化时间和日期
+                            const timeFormatter = new Intl.DateTimeFormat('zh-CN', {
+                                timeZone: zone.zone,
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                second: '2-digit',
+                                hour12: false
+                            })
+                            
+                            const dateFormatter = new Intl.DateTimeFormat('zh-CN', {
+                                timeZone: zone.zone,
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                                weekday: 'long'
+                            })
+                            
+                            zone.time = timeFormatter.format(this.referenceTime)
+                            zone.date = dateFormatter.format(this.referenceTime)
+                            zone.offset = this.getTimezoneOffset(zone.zone)
+                            zone.abbreviation = this.getTimezoneAbbreviation(zone.zone)
+                        } catch (error) {
+                            console.error(`Error formatting time for zone ${zone.zone}:`, error)
+                        }
+                    })
+                },
+                startAutoUpdate() {
+                    if (this.updateInterval) {
+                        clearInterval(this.updateInterval)
+                    }
+                    
+                    this.updateInterval = setInterval(() => {
+                        // 每秒增加一秒
+                        this.referenceTime = new Date(this.referenceTime.getTime() + 1000)
+                        this.updateAllTimeZones()
+                    }, 1000)
+                },
+                supportsDST(timeZone) {
+                    // 检查时区是否支持夏令时
+                    return timeZone.startsWith('America/') || 
+                           timeZone.startsWith('Europe/') || 
+                           timeZone === 'Europe/London';
+                }
+            },
+            mounted() {
+                this.startAutoUpdate()
+            },
+            beforeUnmount() {
+                if (this.updateInterval) {
+                    clearInterval(this.updateInterval)
+                }
+            }
+        }).mount('#app')
+    </script>
 </body>
 </html>
